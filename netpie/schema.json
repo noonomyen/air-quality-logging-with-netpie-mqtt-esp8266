@@ -1,0 +1,17 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "time": {
+      "type": "number"
+    },
+    "temp": {
+      "type": "number"
+    },
+    "humid": {
+      "type": "number"
+    },
+    "index": {
+      "type": "number"
+    }
+  }
+}
