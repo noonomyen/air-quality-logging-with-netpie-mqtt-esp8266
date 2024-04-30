@@ -190,7 +190,7 @@ void batch_re_publish() {
             data["humid"] = std::get<2>(it);
             data["index"] = std::get<3>(it);
 
-            obj["ts"] = epoch_time - std::get<0>(it);
+            obj["ts"] = -(epoch_time - std::get<0>(it));
         }
 
         if (!mqtt.connected()) mqtt_connect();
