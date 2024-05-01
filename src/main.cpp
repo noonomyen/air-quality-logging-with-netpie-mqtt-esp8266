@@ -134,22 +134,31 @@ void loop() {
 
         PRINT("[%lu] DHT Temperature: %f°C Humidity: %f%c Heat Index: %f°C\n", epoch_time, temperature, humidity, '%', heat_index);
 
-        JsonDocument doc;
-        JsonObject data = doc.createNestedObject("data");
-
-        data["time"] = epoch_time;
-        data["temp"] = temperature;
-        data["humid"] = humidity;
-        data["index"] = heat_index;
-
         if (!mqtt.connected()) mqtt_connect();
 
-        if (mqtt.publish(MQTT_PUBLISH, doc.as<String>().c_str())) {
-            PRINT("MQTT Data is published\n");
+        if (mqtt.connected()) {
+            JsonDocument doc;
+            JsonObject data = doc.createNestedObject("data");
+
+            data["time"] = epoch_time;
+            data["temp"] = temperature;
+            data["humid"] = humidity;
+            data["index"] = heat_index;
+
+            if (!mqtt.connected()) mqtt_connect();
+
+            if (mqtt.publish(MQTT_PUBLISH, doc.as<String>().c_str())) {
+                PRINT("MQTT Data is published\n");
+            } else {
+                batch_data.push_back({ epoch_time, temperature, humidity, heat_index });
+                PRINT("MQTT Failed to publish data, add to batch %u\n", batch_data.size());
+            }
         } else {
             batch_data.push_back({ epoch_time, temperature, humidity, heat_index });
-            PRINT("MQTT Failed to publish data, add to batch %u\n", batch_data.size());
+            PRINT("MQTT is disconnected, add to batch %u\n", batch_data.size());
         }
+
+
 
         PRINT("System free heap size: %lu\n", system_get_free_heap_size());
         delay(100);
@@ -192,6 +201,8 @@ void batch_re_publish() {
 
             obj["ts"] = -(epoch_time - std::get<0>(it));
         }
+
+        doc["merge"] = true;
 
         if (!mqtt.connected()) mqtt_connect();
 
